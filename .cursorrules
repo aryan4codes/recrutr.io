@@ -1,0 +1,35 @@
+# Cursor: Project Rules for Recruiting Copilot
+
+## Guiding Principles
+- Ship a clean, demo-ready flow: JD → Ingest → Shortlist → Panel → Schedule → Audit.
+- Prefer typed, **structured outputs** via `generateObject` + Zod schemas.
+- Treat every LLM call as untrusted; validate with Zod and fail gracefully.
+- Keep server-only secrets in server routes; never expose service-role keys client-side.
+- Log all agent tool invocations to `audit_logs` / `prompt_logs`.
+
+## Code Style
+- TypeScript strict mode. No `any` unless isolated at boundaries.
+- `lib/` for adapters (supabase, vector, ats, calendar). `app/api/tools/*` are **thin** HTTP wrappers.
+- UI uses shadcn components, minimal custom CSS. No blocking spinners—use optimistic UI when safe.
+
+## Agents & Tools
+- Orchestrator must only return via the `answer` tool (final shape enforced by Zod).
+- Add tools incrementally. Start with: `create-or-update-job`, `embed-text`, `vector-search`, `explain-candidate`.
+- Hard rule: tools **must not** mutate outside their scope. DB writes happen via explicit routes.
+
+## Data & Vector
+- Use pgvector (cosine). All embeddings are 3072-dim. Validate lengths.
+- Never store raw files in DB; store in Supabase Storage and path refs in `candidate_docs`.
+- For search, call `rpc('search_candidates', { job, k })`. Do not inline raw SQL in API routes.
+
+## Security
+- Redact PII before model calls (`lib/redact.ts`).
+- Service-role key only in server contexts. Use RLS policies before prod.
+- Avoid scraping sources under restrictive ToS.
+
+## Testing & DX
+- Add minimal smoke tests for API routes. Prefer dependency injection for adapters.
+- Keep tool routes idempotent where feasible. Return explicit error shapes.
+
+## Commit Hygiene
+- Group changes by feature. Keep README updated when adding tools.
