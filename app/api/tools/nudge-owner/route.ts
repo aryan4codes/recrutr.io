@@ -109,17 +109,21 @@ export async function GET() {
 
     if (staleStages && staleStages.length > 0) {
       // Group by job and send nudges
-      const jobGroups = staleStages.reduce((acc, app) => {
-        const jobId = app.jobs.id
+      const jobGroups = staleStages.reduce((acc: Record<string, { job: any; applications: any[] }>, app: any) => {
+        const jobRecord = Array.isArray(app.jobs) ? app.jobs[0] : app.jobs
+        if (!jobRecord || !jobRecord.id) {
+          return acc
+        }
+        const jobId = jobRecord.id as string
         if (!acc[jobId]) {
           acc[jobId] = {
-            job: app.jobs,
+            job: jobRecord,
             applications: []
           }
         }
         acc[jobId].applications.push(app)
         return acc
-      }, {} as any)
+      }, {})
 
       for (const [jobId, group] of Object.entries(jobGroups) as any) {
         const nudgeText = `Pipeline Update Needed: ${group.job.title} has ${group.applications.length} applications in stale stages. Please review and take action.`
