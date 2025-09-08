@@ -105,8 +105,8 @@ export default function CandidatesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          View
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/candidates/${candidate.id}`}>View</Link>
                         </Button>
                         <Button variant="outline" size="sm">
                           Edit
