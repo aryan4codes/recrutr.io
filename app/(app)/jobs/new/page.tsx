@@ -102,7 +102,7 @@ export default function NewJobPage() {
       const data = await response.json()
       
       if (response.ok) {
-        alert(`Job created successfully! ID: ${data.job.id}`)
+        alert(`Job created successfully! ID: `)
         router.push('/jobs')
       } else {
         alert(`Error: ${data.error}`)
