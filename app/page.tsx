@@ -212,16 +212,16 @@ export default function LandingPage() {
               transition={{ delay: 0.1 }}
               viewport={{ once: true }}
             >
-              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300">
+              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300 h-full flex flex-col">
                 <div className="flex items-center justify-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed">
+                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed flex-1">
                   "Our AI agents reduced time-to-hire by 65% and improved candidate quality scores by 40%. The autonomous decision-making is remarkable."
                 </blockquote>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-3 mt-auto">
                   <motion.div
                     className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-400 rounded-full flex items-center justify-center"
                     whileHover={{ scale: 1.1 }}
@@ -243,16 +243,16 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300">
+              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300 h-full flex flex-col">
                 <div className="flex items-center justify-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed">
+                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed flex-1">
                   "The multi-agent coordination is incredible. Each agent learns and adapts, making our hiring process smarter every day."
                 </blockquote>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-3 mt-auto">
                   <motion.div
                     className="w-12 h-12 bg-gradient-to-br from-sage-100 to-sage-200 rounded-full flex items-center justify-center"
                     whileHover={{ scale: 1.1 }}
@@ -274,16 +274,16 @@ export default function LandingPage() {
               transition={{ delay: 0.3 }}
               viewport={{ once: true }}
             >
-              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300">
+              <GlassCard className="p-8 text-center hover:shadow-xl transition-all duration-300 h-full flex flex-col">
                 <div className="flex items-center justify-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed">
+                <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed flex-1">
                   "Watching our agents work together autonomously is like having a team of recruiting experts that never sleep. Revolutionary."
                 </blockquote>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-3 mt-auto">
                   <motion.div
                     className="w-12 h-12 bg-gradient-to-br from-peach-100 to-peach-200 rounded-full flex items-center justify-center"
                     whileHover={{ scale: 1.1 }}
