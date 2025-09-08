@@ -28,86 +28,45 @@ export default function NewJobPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `Parse the following job requirements and extract structured information including job title, experience level, location, skills, and generate a comprehensive job description:
-
-"${idea}"
-
-Please use the parse_job_requirements tool to extract all relevant details and return structured data.`
+          prompt: idea
         })
       })
 
       const data = await response.json()
       console.log('HR Agent Response:', data) // For debugging
       
-      // Extract structured data from tool results
-      if (data.toolResults && data.toolResults.length > 0) {
-        const parseResult = data.toolResults.find((result: any) => 
-          result.toolName === 'parse_job_requirements'
-        )
-        
-        if (parseResult && parseResult.result) {
-          const jobData = parseResult.result
-          
-          // Check for missing critical fields
-          const missing: string[] = []
-          if (!jobData.job_title || jobData.job_title.trim() === '') {
-            missing.push('Job Title')
-          }
-          if (!jobData.level || jobData.level.trim() === '') {
-            missing.push('Experience Level')
-          }
-          if (!jobData.location || jobData.location.trim() === '' || jobData.location === null) {
-            missing.push('Location')
-          }
-          
-          // Auto-populate fields
-          setTitle(jobData.job_title || '')
-          setLevel(jobData.level || '')
-          setLocation(jobData.location || '')
-          
-          // Show popup if fields are missing
-          if (missing.length > 0) {
-            setMissingFields(missing)
-            setShowMissingFieldsPopup(true)
-          }
-          
-          // Format job description as plain text
-          const formattedJD = `Job Description: ${jobData.job_title}
-
-Job Summary:
-${jobData.job_summary}
-
-Key Responsibilities:
-${jobData.key_responsibilities.map((resp: string) => `- ${resp}`).join('\n')}
-
-Required Qualifications:
-${jobData.qualifications.map((qual: string) => `- ${qual}`).join('\n')}
-
-Required Skills:
-${jobData.required_skills.map((skill: string) => `- ${skill}`).join('\n')}
-
-${jobData.preferred_skills && jobData.preferred_skills.length > 0 ? `
-Preferred Skills:
-${jobData.preferred_skills.map((skill: string) => `- ${skill}`).join('\n')}` : ''}
-
-${jobData.experience_years && jobData.experience_years !== null ? `
-Experience: ${jobData.experience_years}` : ''}
-
-${jobData.team_department && jobData.team_department !== null ? `
-Team: ${jobData.team_department}` : ''}
-
-${jobData.company_benefits && jobData.company_benefits.length > 0 ? `
-Benefits:
-${jobData.company_benefits.map((benefit: string) => `- ${benefit}`).join('\n')}` : ''}`
-
-          setJd(formattedJD)
-        } else {
-          // Fallback to basic response
-          setJd(data.response || 'Failed to generate structured job description')
+      // Extract structured data from the response
+      const jobData = data.structuredData
+      
+      if (jobData) {
+        // Check for missing critical fields using new field names
+        const missing: string[] = []
+        if (!jobData.role_title || jobData.role_title.trim() === '' || jobData.role_title === 'not provided') {
+          missing.push('Job Title')
         }
+        if (!jobData.level || jobData.level.trim() === '' || jobData.level === 'not provided') {
+          missing.push('Experience Level')
+        }
+        if (!jobData.location || jobData.location.trim() === '' || jobData.location === 'not provided') {
+          missing.push('Location')
+        }
+        
+        // Auto-populate fields with new field names
+        setTitle(jobData.role_title && jobData.role_title !== 'not provided' ? jobData.role_title : '')
+        setLevel(jobData.level && jobData.level !== 'not provided' ? jobData.level : '')
+        setLocation(jobData.location && jobData.location !== 'not provided' ? jobData.location : '')
+        
+        // Show popup if fields are missing
+        if (missing.length > 0) {
+          setMissingFields(missing)
+          setShowMissingFieldsPopup(true)
+        }
+        
+        // Use the complete description from the new format
+        setJd(jobData.description || 'Failed to generate job description')
       } else {
-        // Fallback to basic response
-        setJd(data.response || 'Failed to generate job description')
+        // Fallback to basic response or show error
+        setJd(data.error || 'Failed to generate job description. Please try again.')
       }
       
     } catch (error) {

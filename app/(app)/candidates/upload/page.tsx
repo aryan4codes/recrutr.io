@@ -36,6 +36,21 @@ export default function UploadResumePage() {
   const router = useRouter()
 
   // File processing functions
+  const processFileToBase64 = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result) {
+          resolve(reader.result as string)
+        } else {
+          reject('Failed to read file')
+        }
+      }
+      reader.onerror = () => reject('Error reading file')
+      reader.readAsDataURL(file)
+    })
+  }
+
   const extractTextFromFile = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -150,31 +165,60 @@ export default function UploadResumePage() {
         f.id === file.id ? { ...f, status: 'processing' as FileStatus } : f
       ))
 
-      const resumeText = await extractTextFromFile(file.file)
-      
-      const response = await fetch('/api/tools/parse-resume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resume_text: resumeText,
-          candidate_name: candidateName || undefined,
-          candidate_email: candidateEmail || undefined
+      // For PDF and supported files, send as FormData to new OpenAI responses API
+      if (file.file.type === 'application/pdf' || file.file.type.includes('doc')) {
+        const formData = new FormData()
+        formData.append('file', file.file)
+        if (candidateName) formData.append('candidate_name', candidateName)
+        if (candidateEmail) formData.append('candidate_email', candidateEmail)
+        
+        const response = await fetch('/api/tools/parse-resume', {
+          method: 'POST',
+          body: formData
         })
-      })
 
-      const data = await response.json()
-      
-      if (response.ok) {
-        setUploadFiles(prev => prev.map(f => 
-          f.id === file.id ? { ...f, status: 'completed' as FileStatus, result: data } : f
-        ))
-        setResult(data)
-        alert(`Candidate profile created! ID: ${data.candidate.id}`)
+        const data = await response.json()
+        
+        if (response.ok) {
+          setUploadFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'completed' as FileStatus, result: data } : f
+          ))
+          setResult(data)
+          alert(`Candidate profile created! ID: ${data.candidate.id}`)
+        } else {
+          setUploadFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'error' as FileStatus, error: data.error } : f
+          ))
+          alert(`Error: ${data.error}`)
+        }
       } else {
-        setUploadFiles(prev => prev.map(f => 
-          f.id === file.id ? { ...f, status: 'error' as FileStatus, error: data.error } : f
-        ))
-        alert(`Error: ${data.error}`)
+        // For text files, extract text first
+        const resumeText = await extractTextFromFile(file.file)
+        
+        const response = await fetch('/api/tools/parse-resume', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resume_text: resumeText,
+            candidate_name: candidateName || undefined,
+            candidate_email: candidateEmail || undefined
+          })
+        })
+
+        const data = await response.json()
+        
+        if (response.ok) {
+          setUploadFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'completed' as FileStatus, result: data } : f
+          ))
+          setResult(data)
+          alert(`Candidate profile created! ID: ${data.candidate.id}`)
+        } else {
+          setUploadFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'error' as FileStatus, error: data.error } : f
+          ))
+          alert(`Error: ${data.error}`)
+        }
       }
     } catch (error) {
       console.error('Error processing file:', error)
@@ -203,15 +247,27 @@ export default function UploadResumePage() {
           f.id === file.id ? { ...f, status: 'processing' as FileStatus } : f
         ))
 
-        const resumeText = await extractTextFromFile(file.file)
-        
-        const response = await fetch('/api/tools/parse-resume', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            resume_text: resumeText
+        let response: Response
+
+        // For PDF and supported files, send as FormData to new OpenAI responses API
+        if (file.file.type === 'application/pdf' || file.file.type.includes('doc')) {
+          const formData = new FormData()
+          formData.append('file', file.file)
+          
+          response = await fetch('/api/tools/parse-resume', {
+            method: 'POST',
+            body: formData
           })
-        })
+        } else {
+          // For text files, extract text first
+          const resumeText = await extractTextFromFile(file.file)
+          
+          response = await fetch('/api/tools/parse-resume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume_text: resumeText })
+          })
+        }
 
         const data = await response.json()
         
@@ -516,19 +572,94 @@ export default function UploadResumePage() {
                         <div><strong>Email:</strong> {result.candidate.email || 'Not found'}</div>
                         <div><strong>Phone:</strong> {result.candidate.phone || 'Not found'}</div>
                       </div>
+                      
+                      {result.missing_fields && result.missing_fields.length > 0 && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertCircle className="w-4 h-4 text-yellow-600" />
+                            <span className="text-sm font-medium text-yellow-800">Missing Information</span>
+                          </div>
+                          <p className="text-xs text-yellow-700 mb-2">
+                            Please manually add the following information to complete the profile:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {result.missing_fields.map((field: string, index: number) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs"
+                              >
+                                {field}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {result.additional_info && Object.keys(result.additional_info).length > 0 && (
+                        <div className="mt-3">
+                          <h4 className="text-sm font-medium text-green-800 mb-2">Additional Information Extracted</h4>
+                          <div className="space-y-1 text-xs">
+                            {result.additional_info.location && (
+                              <div><strong>Location:</strong> {result.additional_info.location}</div>
+                            )}
+                            {result.additional_info.linkedin && (
+                              <div><strong>LinkedIn:</strong> <a href={result.additional_info.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{result.additional_info.linkedin}</a></div>
+                            )}
+                            {result.additional_info.portfolio && (
+                              <div><strong>Portfolio:</strong> <a href={result.additional_info.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{result.additional_info.portfolio}</a></div>
+                            )}
+                            {result.additional_info.summary && (
+                              <div><strong>Summary:</strong> <span className="text-gray-600">{result.additional_info.summary}</span></div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {result.parsed_data?.skills?.length > 0 && (
+                    {result.structured_data?.skills?.length > 0 && (
                       <div>
                         <h3 className="font-medium">Extracted Skills</h3>
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {result.parsed_data.skills.map((skill: string, index: number) => (
+                          {result.structured_data.skills.map((skill: string, index: number) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs"
                             >
                               {skill}
                             </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.structured_data?.experience?.length > 0 && (
+                      <div>
+                        <h3 className="font-medium">Work Experience</h3>
+                        <div className="mt-2 space-y-2">
+                          {result.structured_data.experience.slice(0, 3).map((exp: any, index: number) => (
+                            <div key={index} className="text-sm border rounded p-2">
+                              <div className="font-medium">{exp.position} at {exp.company}</div>
+                              <div className="text-muted-foreground text-xs">{exp.duration}</div>
+                            </div>
+                          ))}
+                          {result.structured_data.experience.length > 3 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{result.structured_data.experience.length - 3} more positions
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.structured_data?.education?.length > 0 && (
+                      <div>
+                        <h3 className="font-medium">Education</h3>
+                        <div className="mt-2 space-y-1">
+                          {result.structured_data.education.slice(0, 2).map((edu: any, index: number) => (
+                            <div key={index} className="text-sm">
+                              <div className="font-medium">{edu.degree} {edu.field && `in ${edu.field}`}</div>
+                              <div className="text-muted-foreground text-xs">{edu.institution} {edu.year && `(${edu.year})`}</div>
+                            </div>
                           ))}
                         </div>
                       </div>

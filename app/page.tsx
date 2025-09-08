@@ -132,7 +132,7 @@ export default function LandingPage() {
                   transition={{ delay: 0.8 }}
                 >
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button size="lg" className="shadow-2xl text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-400 hover:from-primary-700 hover:to-sage-700">
+                    <Button size="lg" className="shadow-2xl text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-400 hover:from-primary-700 hover:to-sage-700 " onClick={() => window.location.href = '/dashboard'}>
                       Deploy AI Agents
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
