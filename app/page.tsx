@@ -549,6 +549,108 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="py-24 bg-gradient-to-br from-gray-50 via-white to-sage-50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center space-y-4 mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <motion.div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100/80 backdrop-blur rounded-full" whileHover={{ scale: 1.05 }}>
+              <Sparkles className="w-4 h-4 text-primary-600" />
+              <span className="text-sm font-semibold text-primary-700">Simple, transparent pricing</span>
+            </motion.div>
+            <h2 className="text-4xl font-bold font-display text-gray-900">Choose the right plan</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Start free, upgrade when you need unlimited scale and advanced capabilities.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Free */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} viewport={{ once: true }}>
+              <GlassCard className="p-8 h-full flex flex-col">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Free</h3>
+                  <p className="text-gray-600 mt-1">For trying out AI recruiting</p>
+                </div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-bold text-gray-900">₹0</span>
+                  <span className="text-gray-500">/ mo</span>
+                </div>
+                <ul className="space-y-3 text-gray-700 flex-1">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Up to 3 job postings</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> 100 resume parses / month</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Basic AI chat & parsing</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Community support</li>
+                </ul>
+                <div className="mt-8">
+                  <Link href="/dashboard">
+                    <Button variant="outline" className="w-full">Start Free</Button>
+                  </Link>
+                </div>
+              </GlassCard>
+            </motion.div>
+
+            {/* Pro - Most Popular */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }}>
+              <GlassCard className="p-8 h-full flex flex-col ring-1 ring-primary-200 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Pro</h3>
+                    <p className="text-gray-600 mt-1">Scale with advanced AI</p>
+                  </div>
+                  <Badge variant="secondary">Most Popular</Badge>
+                </div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-bold text-gray-900">₹3,999</span>
+                  <span className="text-gray-500">/ mo</span>
+                </div>
+                <ul className="space-y-3 text-gray-700 flex-1">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Unlimited job creations</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Unlimited candidate shortlisting</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Advanced matching & vector search</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Scheduling & interview tools</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Analytics & pipeline insights</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Priority support</li>
+                </ul>
+                <div className="mt-8">
+                  <Link href="/dashboard">
+                    <Button className="w-full">Upgrade to Pro</Button>
+                  </Link>
+                </div>
+              </GlassCard>
+            </motion.div>
+
+            {/* Enterprise */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} viewport={{ once: true }}>
+              <GlassCard className="p-8 h-full flex flex-col">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Enterprise</h3>
+                  <p className="text-gray-600 mt-1">For large teams & security needs</p>
+                </div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-bold text-gray-900">Custom</span>
+                </div>
+                <ul className="space-y-3 text-gray-700 flex-1">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> SSO/SAML & role-based access</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Dedicated support & onboarding</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Custom AI models & controls</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> Security & compliance features</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /> SLA & uptime guarantees</li>
+                </ul>
+                <div className="mt-8">
+                  <Link href="/dashboard">
+                    <Button variant="outline" className="w-full">Contact Sales</Button>
+                  </Link>
+                </div>
+              </GlassCard>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <AnimatedBackground>
         <section className="py-24 relative overflow-hidden">
