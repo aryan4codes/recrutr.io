@@ -132,15 +132,18 @@ export default function LandingPage() {
                   transition={{ delay: 0.8 }}
                 >
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button size="lg" className="shadow-2xl text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-400 hover:from-primary-700 hover:to-sage-700 " onClick={() => window.location.href = '/dashboard'}>
-                      Deploy AI Agents
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    <Link href="/recruiter">
+                      <Button size="lg" className="shadow-2xl text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-400 hover:from-primary-700 hover:to-sage-700">
+                        <Bot className="w-5 h-5 mr-2" />
+                        Try Recruiter AI
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </Link>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button onClick={() => window.location.href = '#how-it-works'} variant="outline" size="lg" className="text-lg px-8 py-4 border-2 border-primary-200 hover:border-primary-300">
                       <Eye className="w-5 h-5 mr-2" />
-                      Watch Agents Work
+                      Watch Demo
                     </Button >
                   </motion.div>
                 </motion.div>
@@ -180,8 +183,145 @@ export default function LandingPage() {
         </section>
       </AnimatedBackground>
 
+      {/* Recruiter AI Spotlight Section */}
+      <section className="py-24 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-primary-200 rounded-full mb-6"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Bot className="w-4 h-4 text-primary-600" />
+              <span className="text-sm font-semibold text-primary-700">Featured: Recruiter AI</span>
+              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            </motion.div>
+            
+            <h2 className="text-5xl font-bold font-display text-gray-900 mb-6">
+              Meet Your New <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Recruiter AI</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              The world's most advanced AI recruiting assistant. Generate job descriptions, find perfect candidates, 
+              and get intelligent screening—all in one conversational interface.
+            </p>
+            
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link href="/recruiter">
+                <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 shadow-xl">
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Start Chatting with AI
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+          
+          {/* Three-step process visualization */}
+          <motion.div
+            className="grid md:grid-cols-3 gap-8 mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <div className="text-center group">
+              <motion.div
+                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                whileHover={{ rotate: 5 }}
+              >
+                <FileCheck className="w-10 h-10 text-white" />
+              </motion.div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">1. Describe Your Need</h3>
+              <p className="text-gray-600">Simply tell the AI what kind of role you're hiring for</p>
+            </div>
+            
+            <div className="text-center group">
+              <motion.div
+                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                whileHover={{ rotate: -5 }}
+              >
+                <Users className="w-10 h-10 text-white" />
+              </motion.div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">2. AI Finds Candidates</h3>
+              <p className="text-gray-600">Get perfectly matched candidates from your talent pool</p>
+            </div>
+            
+            <div className="text-center group">
+              <motion.div
+                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                whileHover={{ rotate: 5 }}
+              >
+                <Target className="w-10 h-10 text-white" />
+              </motion.div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">3. Smart Recommendations</h3>
+              <p className="text-gray-600">Receive ranked candidates with detailed analysis</p>
+            </div>
+          </motion.div>
+          
+          {/* Demo preview */}
+          <motion.div
+            className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 border border-gray-200 shadow-xl"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                {/* Chat header */}
+                <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Recruiter AI</h4>
+                      <p className="text-xs text-white/80">Your hiring assistant</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-xs">Online</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Sample conversation */}
+                <div className="p-6 space-y-4">
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                      You
+                    </div>
+                    <div className="bg-primary-50 text-primary-800 px-4 py-2 rounded-2xl max-w-md">
+                      Find me a senior React developer with 5+ years experience in Mumbai
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-gray-50 text-gray-800 px-4 py-3 rounded-2xl max-w-2xl">
+                      <p className="mb-2">Perfect! I'll create a job description and find matching candidates for you.</p>
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-sm">
+                        <div className="font-semibold text-gray-900 mb-1">🚀 Generated Job: Senior React Developer</div>
+                        <div className="text-gray-600">Mumbai • 5+ years • React, TypeScript, Node.js</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Social Proof */}
-      <section className="py-24 bg-white border-b border-gray-100 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-gray-50 via-white to-sage-50 border-b border-gray-100 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary-50/30 via-transparent to-sage-50/30"></div>
         
         <div className="relative max-w-7xl mx-auto px-6">
@@ -690,9 +830,9 @@ export default function LandingPage() {
                 viewport={{ once: true }}
               >
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link href="/dashboard">
+                  <Link href="/recruiter">
                     <Button size="lg" className="shadow-2xl text-lg px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-400 hover:from-primary-700 hover:via-sage-700 hover:to-peach-700">
-                      Deploy Agents Now
+                      Try Recruiter AI
                       <Bot className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>

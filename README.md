@@ -13,12 +13,14 @@ An agentic AI recruiting assistant that shortlists candidates, explains rankings
 ## ✨ Features
 
 ### 🤖 AI-Powered Workflows
+- **Recruiter AI Chat**: Single-page chat interface for end-to-end recruitment
 - **Job Description Architect**: Transform hiring ideas into structured JDs
 - **Resume Parser**: Extract structured data from resume text
 - **Vector Search**: Find best-matching candidates using embeddings
 - **Candidate Explanations**: AI-generated fit analysis with evidence
 - **Interview Panel Design**: Optimal interviewer selection and question generation
 - **Automated Nudges**: Smart pipeline health monitoring
+- **Full Audit Trail**: Complete transparency of AI decisions and actions
 
 ### 📊 Core Functionality
 - **Jobs Management**: Create, edit, and manage job openings
@@ -96,6 +98,14 @@ Visit `http://localhost:3000` to see the application.
 
 ## 🎯 Usage Flow
 
+### Option 1: Full AI Workflow (Recommended)
+1. **Chat with Recruiter AI**: Visit `/recruiter` and describe your hiring needs
+2. **AI Generates JD**: System creates job description with embedding
+3. **AI Sources Candidates**: Semantic search finds best matches
+4. **AI Ranks & Screens**: Rule-based scoring with AI explanations
+5. **Review Results**: JobCard and CandidateCards with transparency
+
+### Option 2: Step-by-Step Workflow
 1. **Create Jobs**: Use `/jobs/new` to generate professional job descriptions
 2. **Add Candidates**: Upload resumes via `/candidates/upload` 
 3. **Generate Shortlists**: Use `/shortlist` to find and rank top matches
