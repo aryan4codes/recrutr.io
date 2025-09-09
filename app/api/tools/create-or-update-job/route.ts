@@ -6,10 +6,14 @@ import { AuditLogger } from '@/lib/audit'
 import { z } from 'zod'
 
 const JobSchema = z.object({
+  id: z.string().optional(), // Include ID for updates
   title: z.string(),
   jd_text: z.string(),
-  location: z.string().optional(),
-  level: z.string().optional(),
+  location: z.string().optional().nullable(),
+  level: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
+  employment_type: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
   created_by: z.string().optional()
 })
 
@@ -18,12 +22,36 @@ export async function POST(req: NextRequest) {
     const { job } = await req.json()
     const validatedJob = JobSchema.parse(job)
 
-    // Create or update job
-    const { data, error } = await supabaseAdmin
-      .from('jobs')
-      .insert(validatedJob)
-      .select('*')
-      .single()
+    // Prepare job data (remove id from insert/update data)
+    const { id: jobId, ...jobData } = validatedJob
+    
+    let data, error
+
+    if (jobId) {
+      // Update existing job
+      const result = await supabaseAdmin
+        .from('jobs')
+        .update({
+          ...jobData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId)
+        .select('*')
+        .single()
+      
+      data = result.data
+      error = result.error
+    } else {
+      // Create new job
+      const result = await supabaseAdmin
+        .from('jobs')
+        .insert(jobData)
+        .select('*')
+        .single()
+      
+      data = result.data
+      error = result.error
+    }
     
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { 
@@ -42,18 +70,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Log audit event
-    await AuditLogger.logJobCreation(
-      validatedJob.created_by || 'anonymous',
-      data.id,
-      validatedJob
-    )
+    if (jobId) {
+      // Log job update
+      await AuditLogger.logJobCreation(
+        validatedJob.created_by || 'anonymous',
+        data.id,
+        { ...validatedJob, action: 'update' }
+      )
+    } else {
+      // Log job creation
+      await AuditLogger.logJobCreation(
+        validatedJob.created_by || 'anonymous',
+        data.id,
+        validatedJob
+      )
+    }
 
     return new Response(JSON.stringify({ job: data }), {
       headers: { 'content-type': 'application/json' }
     })
   } catch (error) {
-    console.error('Create job error:', error)
-    return new Response(JSON.stringify({ error: 'Failed to create job' }), { 
+    console.error('Create/update job error:', error)
+    return new Response(JSON.stringify({ error: 'Failed to save job' }), { 
       status: 500,
       headers: { 'content-type': 'application/json' }
     })
