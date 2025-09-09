@@ -21,17 +21,8 @@ import {
   Loader2,
   MessageSquare,
   Bot,
-  Sparkles,
-  ArrowRight,
-  Zap,
-  Brain,
-  Target,
-  CheckCircle2,
-  TrendingUp,
-  Clock,
-  BarChart3
+  Target
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface JobData {
   id: string;
@@ -53,20 +44,17 @@ interface CandidateData {
   current_company: string;
   current_position: string;
   similarity: number;
-  final_score?: number;
-  screening_summary?: string;
-  top_skills?: Array<{ skill: string; evidence: string }>;
-  confidence?: number;
+  final_score: number;
+  screening_summary: string;
+  top_skills: string[];
 }
 
-interface TraceLog {
+interface TraceLogData {
   id: string;
   agent_name: string;
   prompt: string;
   tool_calls: any;
   output: any;
-  sql_executed?: string;
-  execution_time_ms: number;
   created_at: string;
 }
 
@@ -74,458 +62,226 @@ export default function RecruiterPage() {
   const [showTracePane, setShowTracePane] = useState(false);
   const [currentJob, setCurrentJob] = useState<JobData | null>(null);
   const [candidates, setCandidates] = useState<CandidateData[]>([]);
-  const [traceLogs, setTraceLogs] = useState<TraceLog[]>([]);
-  const [input, setInput] = useState('');
+  const [traceLogs, setTraceLogs] = useState<TraceLogData[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/recruiter-agent',
     }),
-    onFinish: ({ message }) => {
-      // Debug: Log message structure
-      console.log('Received message:', message);
-      
-      // Parse any structured data from the AI response
-      try {
-        const content = message.parts?.[0]?.type === 'text' ? message.parts[0].text : '';
-        console.log('Extracted content:', content);
-        const lines = content.split('\n');
-        lines.forEach((line: string) => {
-          if (line.startsWith('JOB_CREATED:')) {
-            const jobData = JSON.parse(line.substring(12));
-            setCurrentJob(jobData);
-          } else if (line.startsWith('CANDIDATES_FOUND:')) {
-            const candidateData = JSON.parse(line.substring(17));
-            setCandidates(candidateData);
-          } else if (line.startsWith('CANDIDATES_RANKED:')) {
-            const rankedData = JSON.parse(line.substring(19));
-            setCandidates(rankedData);
-          } else if (line.startsWith('TRACE_LOG:')) {
-            const traceData = JSON.parse(line.substring(10));
-            setTraceLogs(prev => [...prev, traceData]);
-          }
-        });
-      } catch (e) {
-        // Ignore parsing errors
+    onFinish: (options) => {
+      // Parse structured data from the AI response
+      const content = options.message.parts
+        ?.filter((part: any) => part.type === 'text')
+        .map((part: any) => part.text)
+        .join('') || '';
+
+      // Look for structured data markers
+      const jobMatch = content.match(/JOB_CREATED:\s*({[\s\S]*?})/);
+      const candidatesMatch = content.match(/CANDIDATES_FOUND:\s*(\[[\s\S]*?\])/);
+      const traceMatch = content.match(/TRACE_LOG:\s*({[\s\S]*?})/); 
+
+      if (jobMatch) {
+        try {
+          const jobData = JSON.parse(jobMatch[1]);
+          setCurrentJob(jobData);
+        } catch (e) {
+          console.error('Failed to parse job data:', e);
+        }
+      }
+
+      if (candidatesMatch) {
+        try {
+          const candidatesData = JSON.parse(candidatesMatch[1]);
+          setCandidates(candidatesData);
+        } catch (e) {
+          console.error('Failed to parse candidates data:', e);
+        }
+      }
+
+      if (traceMatch) {
+        try {
+          const traceData = JSON.parse(traceMatch[1]);
+          setTraceLogs(prev => [...prev, traceData]);
+        } catch (e) {
+          console.error('Failed to parse trace data:', e);
+        }
       }
     },
   });
 
-  // Debug: Log messages array changes
-  useEffect(() => {
-    console.log('Messages updated:', messages.length, 'Status:', status);
-    if (messages.length > 0) {
-      console.log('Latest message:', messages[messages.length - 1]);
-    }
-  }, [messages, status]);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollTo({
-      top: messagesEndRef.current.scrollHeight,
-      behavior: 'smooth'
-    });
-  }, [messages]);
-
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  const [input, setInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    
-    sendMessage({ text: input });
-    setInput('');
+    if (input.trim() && !isLoading) {
+      sendMessage({ text: input });
+      setInput('');
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
 
+  // Auto-scroll to bottom when new messages arrive or when streaming completes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages.length, status]); // Trigger on message count change and status changes
+
+  // Additional scroll trigger for when content changes during streaming
+  useEffect(() => {
+    if (status === 'streaming' || status === 'ready') {
+      const timeoutId = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages]);
+
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Main Chat Panel */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <motion.div 
-          className="relative bg-gradient-to-r from-primary-500 via-primary-600 to-purple-600 border-b px-6 py-8 overflow-hidden"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5" />
-          <motion.div 
-            className="absolute -top-4 -right-4 w-32 h-32 bg-white/10 rounded-full blur-3xl"
-            animate={{ 
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
-          
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <motion.div
-                className="relative"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              >
-                <motion.div
-                  className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/30"
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 6, repeat: Infinity }}
-                >
-                  <Bot className="h-10 w-10 text-white" />
-                </motion.div>
-                <motion.div
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <div className="w-3 h-3 bg-white rounded-full" />
-                </motion.div>
-              </motion.div>
+        <div className="bg-white border-b border-gray-200 px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
               
               <div>
-                <motion.h1 
-                  className="text-4xl font-bold text-white font-display flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  Recruiter AI
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="h-6 w-6 text-yellow-300" />
-                  </motion.div>
-                </motion.h1>
-                <motion.p 
-                  className="text-white/90 text-lg flex items-center gap-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <div className="w-2 h-2 bg-green-400 rounded-full" />
-                  </motion.div>
-                  Your intelligent hiring assistant
-                </motion.p>
-                
-                {/* Status indicators */}
-                <motion.div 
-                  className="flex items-center gap-4 mt-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <Brain className="h-3 w-3" />
-                    <span>AI Active</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <Zap className="h-3 w-3" />
-                    <span>Ready to Help</span>
-                  </div>
-                </motion.div>
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  Recruiting Copilot
+                </h1>
+                <p className="text-gray-600">
+                  AI-powered hiring assistant with agents
+                </p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-gray-600">Online</span>
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => setShowTracePane(!showTracePane)}
+                className="flex items-center gap-2"
               >
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTracePane(!showTracePane)}
-                  className="flex items-center gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200 shadow-lg"
-                >
-                  <Eye className="h-4 w-4" />
-                  {showTracePane ? 'Hide' : 'Show'} Trace
-                </Button>
-              </motion.div>
+                <Eye className="h-4 w-4" />
+                {showTracePane ? 'Hide' : 'Show'} Trace
+              </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex">
           {/* Chat Messages */}
           <div className="flex-1 flex flex-col">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={messagesEndRef}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.length === 0 ? (
-                  <motion.div 
-                    className="text-center py-20"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                  >
+                  <div className="text-center py-16">
                     <div className="max-w-4xl mx-auto">
-                      {/* Main welcome */}
-                      <motion.div 
-                        className="mb-12"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                      >
-                        <motion.div 
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-100 via-purple-100 to-primary-100 rounded-full mb-8 shadow-lg border border-primary-200"
-                          whileHover={{ scale: 1.05, y: -2 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                          >
-                            <Bot className="w-5 h-5 text-primary-600" />
-                          </motion.div>
-                          <span className="text-sm font-bold text-primary-700">AI-Powered Recruiting Platform</span>
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            <Sparkles className="w-4 h-4 text-primary-500" />
-                          </motion.div>
-                        </motion.div>
+                      <div className="mb-12">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full mb-6 border">
+                          <Bot className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">AI-Powered Recruiting with agents</span>
+                        </div>
                         
-                        <motion.h2 
-                          className="text-6xl font-bold font-display text-gray-900 mb-8 leading-tight"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.6 }}
-                        >
-                          Transform Your 
-                          <motion.span 
-                            className="bg-gradient-to-r from-primary-600 via-purple-600 to-primary-400 bg-clip-text text-transparent"
-                            animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
-                            transition={{ duration: 5, repeat: Infinity }}
-                          >
-                            Hiring Process
-                          </motion.span>
-                        </motion.h2>
+                        <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                          AI Recruiting Assistant
+                        </h2>
                         
-                        <motion.p 
-                          className="text-xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.8 }}
-                        >
-                          Simply describe your hiring needs in natural language. Our advanced AI will generate job descriptions, 
-                          find perfect candidates, and provide intelligent screening—all through an intuitive conversation.
-                        </motion.p>
-                        
-                        {/* Quick stats */}
-                        <motion.div 
-                          className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-12"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 1 }}
-                        >
-                          <motion.div 
-                            className="text-center group cursor-pointer"
-                            whileHover={{ scale: 1.05, y: -2 }}
-                          >
-                            <div className="text-3xl font-bold text-primary-600 mb-1 group-hover:text-primary-700 transition-colors">10x</div>
-                            <div className="text-sm text-gray-600 font-medium">Faster Hiring</div>
-                          </motion.div>
-                          <motion.div 
-                            className="text-center group cursor-pointer"
-                            whileHover={{ scale: 1.05, y: -2 }}
-                          >
-                            <div className="text-3xl font-bold text-purple-600 mb-1 group-hover:text-purple-700 transition-colors">95%</div>
-                            <div className="text-sm text-gray-600 font-medium">Match Accuracy</div>
-                          </motion.div>
-                          <motion.div 
-                            className="text-center group cursor-pointer"
-                            whileHover={{ scale: 1.05, y: -2 }}
-                          >
-                            <div className="text-3xl font-bold text-green-600 mb-1 group-hover:text-green-700 transition-colors">24/7</div>
-                            <div className="text-sm text-gray-600 font-medium">AI Availability</div>
-                          </motion.div>
-                        </motion.div>
-                      </motion.div>
+                        <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                          Describe your hiring needs in natural language. Our AI will generate job descriptions, 
+                          find candidates, and provide intelligent screening through conversation.
+                        </p>
+                      </div>
                       
-                      {/* Three-step process */}
-                      <motion.div 
-                        className="grid md:grid-cols-3 gap-8 mb-12"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                      >
-                        <motion.div 
-                          className="relative bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
-                          whileHover={{ scale: 1.02, y: -5 }}
-                          initial={{ opacity: 0, x: -50 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.8 }}
-                        >
-                          <motion.div
-                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
-                            whileHover={{ rotate: 10 }}
-                          >
-                            <FileText className="w-10 h-10 text-white" />
-                          </motion.div>
-                          <div className="absolute top-4 right-4 text-6xl font-bold text-blue-100 group-hover:text-blue-200 transition-colors">1</div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">Describe Your Need</h3>
-                          <p className="text-gray-600 leading-relaxed">Simply tell our AI what kind of role you're hiring for in natural language</p>
-                          <motion.div
-                            className="mt-4 inline-flex items-center gap-2 text-blue-600 font-medium"
-                            whileHover={{ x: 5 }}
-                          >
-                            <span>Try it now</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.div>
-                        </motion.div>
+                      {/* Process steps */}
+                      <div className="grid md:grid-cols-3 gap-6 mb-12">
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                          <div className="w-12 h-12 mx-auto mb-4 bg-primary-600 rounded-lg flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">1. Describe Your Need</h3>
+                          <p className="text-gray-600">Tell the AI what kind of role you're hiring for</p>
+                        </div>
                         
-                        <motion.div 
-                          className="relative bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
-                          whileHover={{ scale: 1.02, y: -5 }}
-                          initial={{ opacity: 0, y: 50 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 1 }}
-                        >
-                          <motion.div
-                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
-                            whileHover={{ rotate: -10 }}
-                          >
-                            <Users className="w-10 h-10 text-white" />
-                          </motion.div>
-                          <div className="absolute top-4 right-4 text-6xl font-bold text-purple-100 group-hover:text-purple-200 transition-colors">2</div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors">AI Finds Candidates</h3>
-                          <p className="text-gray-600 leading-relaxed">Advanced algorithms search and match the perfect candidates instantly</p>
-                          <motion.div
-                            className="mt-4 inline-flex items-center gap-2 text-purple-600 font-medium"
-                            whileHover={{ x: 5 }}
-                          >
-                            <span>See magic happen</span>
-                            <Sparkles className="w-4 h-4" />
-                          </motion.div>
-                        </motion.div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                          <div className="w-12 h-12 mx-auto mb-4 bg-primary-600 rounded-lg flex items-center justify-center">
+                            <Users className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">2. AI Finds Candidates</h3>
+                          <p className="text-gray-600">Advanced search and matching of candidates</p>
+                        </div>
                         
-                        <motion.div 
-                          className="relative bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
-                          whileHover={{ scale: 1.02, y: -5 }}
-                          initial={{ opacity: 0, x: 50 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 1.2 }}
-                        >
-                          <motion.div
-                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
-                            whileHover={{ rotate: 10 }}
-                          >
-                            <Target className="w-10 h-10 text-white" />
-                          </motion.div>
-                          <div className="absolute top-4 right-4 text-6xl font-bold text-green-100 group-hover:text-green-200 transition-colors">3</div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-700 transition-colors">Smart Recommendations</h3>
-                          <p className="text-gray-600 leading-relaxed">Get ranked candidates with detailed AI-powered insights and analysis</p>
-                          <motion.div
-                            className="mt-4 inline-flex items-center gap-2 text-green-600 font-medium"
-                            whileHover={{ x: 5 }}
-                          >
-                            <span>View insights</span>
-                            <BarChart3 className="w-4 h-4" />
-                          </motion.div>
-                        </motion.div>
-                      </motion.div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                          <div className="w-12 h-12 mx-auto mb-4 bg-primary-600 rounded-lg flex items-center justify-center">
+                            <Target className="w-6 h-6 text-white" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">3. Smart Recommendations</h3>
+                          <p className="text-gray-600">Ranked candidates with detailed analysis</p>
+                        </div>
+                      </div>
                       
-                      {/* Interactive getting started section */}
-                      <motion.div 
-                        className="bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl p-10 shadow-xl"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.8 }}
-                      >
-                        <motion.div
-                          className="text-center mb-8"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 1 }}
-                        >
-                          <motion.h3 
-                            className="text-2xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-3"
-                            whileHover={{ scale: 1.02 }}
-                          >
-                            <motion.div
-                              animate={{ rotate: [0, 15, -15, 0] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              💬
-                            </motion.div>
-                            Start with any of these examples:
-                          </motion.h3>
-                          <p className="text-gray-600">Click on any example to try it instantly</p>
-                        </motion.div>
+                      {/* Example prompts */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                        <div className="text-center mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Example prompts to get started:
+                          </h3>
+                          <p className="text-gray-600">Click on any example to try it</p>
+                        </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <motion.button
-                            className="bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 text-primary-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-primary-200 hover:border-primary-300 group"
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <button
+                            className="bg-white border border-gray-200 hover:border-gray-300 px-4 py-3 rounded-lg text-left transition-colors"
                             onClick={() => setInput("Find me a senior React developer with 5+ years in Mumbai")}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-primary-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <FileText className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="font-medium">"Find me a senior React developer with 5+ years in Mumbai"</span>
-                            </div>
-                          </motion.button>
+                            <span className="text-sm text-gray-700">"Find me a senior React developer with 5+ years in Mumbai"</span>
+                          </button>
                           
-                          <motion.button
-                            className="bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-purple-200 hover:border-purple-300 group"
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
+                          <button
+                            className="bg-white border border-gray-200 hover:border-gray-300 px-4 py-3 rounded-lg text-left transition-colors"
                             onClick={() => setInput("I need a marketing manager for our fintech startup")}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <TrendingUp className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="font-medium">"I need a marketing manager for our fintech startup"</span>
-                            </div>
-                          </motion.button>
+                            <span className="text-sm text-gray-700">"I need a marketing manager for our fintech startup"</span>
+                          </button>
                           
-                          <motion.button
-                            className="bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-green-200 hover:border-green-300 group"
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
+                          <button
+                            className="bg-white border border-gray-200 hover:border-gray-300 px-4 py-3 rounded-lg text-left transition-colors"
                             onClick={() => setInput("Looking for a data scientist with Python and ML experience")}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <BarChart3 className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="font-medium">"Looking for a data scientist with Python and ML experience"</span>
-                            </div>
-                          </motion.button>
+                            <span className="text-sm text-gray-700">"Looking for a data scientist with Python and ML experience"</span>
+                          </button>
                           
-                          <motion.button
-                            className="bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-orange-200 hover:border-orange-300 group"
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
+                          <button
+                            className="bg-white border border-gray-200 hover:border-gray-300 px-4 py-3 rounded-lg text-left transition-colors"
                             onClick={() => setInput("Hire a product manager for B2B SaaS, remote OK")}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Target className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="font-medium">"Hire a product manager for B2B SaaS, remote OK"</span>
-                            </div>
-                          </motion.button>
+                            <span className="text-sm text-gray-700">"Hire a product manager for B2B SaaS, remote OK"</span>
+                          </button>
                         </div>
-                      </motion.div>
+                      </div>
                     </div>
-                  </motion.div>
+                  </div>
               ) : (
                 <>
-                  {messages.map((message) => {
+                  {messages.map((message, index) => {
                     // Handle both old and new AI SDK message formats
                     let content = '';
                     if (message.parts && message.parts.length > 0) {
@@ -538,16 +294,22 @@ export default function RecruiterPage() {
                       // Fallback for older format
                       content = (message as any).content;
                     }
+
+                    // For streaming messages, don't render until we have substantial content
+                    const isStreamingMessage = index === messages.length - 1 && status === 'streaming';
+                    if (isStreamingMessage && content.length < 10) {
+                      return null;
+                    }
                     
                     return (
                       <div
-                        key={message.id}
+                        key={`${message.id}-${content.length}`}
                         className={`flex ${
                           message.role === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         <div
-                          className={`max-w-3xl rounded-lg ${
+                          className={`max-w-3xl rounded-lg transition-all duration-200 ${
                             message.role === 'user'
                               ? 'bg-primary-600 text-white px-4 py-2'
                               : 'bg-white border shadow-sm overflow-hidden'
@@ -558,189 +320,81 @@ export default function RecruiterPage() {
                           ) : (
                             <div className="p-4">
                               {/* Use JobMarkdownMessage for job-related content */}
-                              {(content.includes('**Title**') || content.includes('**Responsibilities**') || content.includes('**Requirements**')) ? (
+                              {content.includes('JOB_CREATED') || content.includes('job description') || content.includes('Job Title') ? (
                                 <JobMarkdownMessage content={content} />
                               ) : (
                                 <MarkdownMessage content={content} />
                               )}
                             </div>
                           )}
-                          
-                          {/* Debug info - remove in production */}
-                          {process.env.NODE_ENV === 'development' && (
-                            <div className="text-xs text-gray-400 mt-2 px-4 pb-2 border-t bg-gray-50">
-                              Status: {status} | Parts: {message.parts?.length || 0} | Role: {message.role}
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
                   })}
-                  
-                  {/* Job Card */}
-                  {currentJob && (
-                    <JobCard job={currentJob} />
-                  )}
-                  
-                  {/* Candidate Cards */}
-                  {candidates.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Found {candidates.length} candidates
-                      </h3>
-                      <div className="grid gap-4">
-                        {candidates.map((candidate) => (
-                          <CandidateCard key={candidate.id} candidate={candidate} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Error Display */}
-                  {error && (
-                    <div className="flex justify-start">
-                      <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-red-800">
-                        <div className="font-semibold">Error occurred:</div>
-                        <div className="text-sm">{error.message}</div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Loading Indicator */}
+
+                  {/* Show typing indicator when AI is responding */}
                   {(status === 'streaming' || status === 'submitted') && (
                     <div className="flex justify-start">
-                      <div className="bg-white border shadow-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {status === 'streaming' ? 'AI is responding...' : 'Processing request...'}
+                      <div className="bg-white border shadow-sm rounded-lg px-4 py-3 max-w-xs">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                          </div>
+                          <span className="text-sm">AI is responding...</span>
+                        </div>
                       </div>
                     </div>
                   )}
+                  
+                  {/* Scroll anchor */}
+                  <div ref={messagesEndRef} />
                 </>
               )}
             </div>
 
-            {/* Enhanced Input */}
-            <motion.div 
-              className="border-t bg-gradient-to-r from-white via-gray-50 to-white p-8 shadow-2xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            {/* Input */}
+            <div className="border-t bg-white p-6">
               <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-                <div className="relative">
-                  <motion.div
-                    className="flex gap-4 items-end"
-                    whileHover={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex-1 relative">
-                      <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-primary-600" />
-                        Describe your hiring needs
-                      </label>
-                      <Textarea
-                        value={input}
-                        onChange={handleInputChange}
-                        placeholder="E.g., 'Find me a senior React developer with 5+ years experience in Mumbai' or 'I need a marketing manager for our fintech startup'..."
-                        className="flex-1 min-h-[80px] max-h-[160px] resize-none border-2 border-gray-200 focus:border-primary-400 focus:ring-primary-200 rounded-2xl px-6 py-4 text-lg placeholder:text-gray-400 shadow-sm transition-all duration-200"
-                        disabled={status === 'streaming' || status === 'submitted'}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmit(e as any);
-                          }
-                        }}
-                      />
-                      
-                      {/* Status indicator */}
-                      <AnimatePresence>
-                        {(status === 'streaming' || status === 'submitted') && (
-                          <motion.div
-                            className="absolute right-4 top-16 flex items-center gap-2 text-primary-600"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                          >
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            >
-                              <Brain className="h-4 w-4" />
-                            </motion.div>
-                            <span className="text-sm font-medium">AI is thinking...</span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button 
-                        type="submit" 
-                        disabled={!input.trim() || status === 'streaming' || status === 'submitted'}
-                        className="px-8 py-6 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl shadow-lg text-lg font-semibold transition-all duration-200"
-                      >
-                        {(status === 'streaming' || status === 'submitted') ? (
-                          <motion.div
-                            className="flex items-center gap-2"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                          >
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            >
-                              <Loader2 className="h-5 w-5" />
-                            </motion.div>
-                            <span>Processing</span>
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            className="flex items-center gap-2"
-                            whileHover={{ x: 2 }}
-                          >
-                            <Send className="h-5 w-5" />
-                            <span>Send to AI</span>
-                          </motion.div>
-                        )}
-                      </Button>
-                    </motion.div>
-                  </motion.div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Textarea
+                      value={input}
+                      onChange={handleInputChange}
+                      placeholder="Describe the role you're hiring for..."
+                      className="min-h-[60px] resize-none border border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-lg px-4 py-3"
+                      disabled={status === 'streaming' || status === 'submitted'}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit(e as any);
+                        }
+                      }}
+                    />
+                  </div>
                   
-                  {/* Enhanced suggestions */}
-                  {!input && (
-                    <motion.div 
-                      className="mt-6 flex flex-wrap gap-3 justify-center"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      {[
-                        { icon: FileText, text: "Generate JD", color: "blue" },
-                        { icon: Users, text: "Find Candidates", color: "purple" },
-                        { icon: Target, text: "Screen & Rank", color: "green" },
-                        { icon: Clock, text: "Schedule Interviews", color: "orange" }
-                      ].map((item, index) => (
-                        <motion.div
-                          key={item.text}
-                          className={`flex items-center gap-2 px-4 py-2 bg-${item.color}-50 text-${item.color}-700 rounded-full border border-${item.color}-200 text-sm font-medium`}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.5 + index * 0.1 }}
-                          whileHover={{ scale: 1.05, y: -2 }}
-                        >
-                          <item.icon className="w-3 h-3" />
-                          <span>{item.text}</span>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
+                  <Button 
+                    type="submit" 
+                    disabled={!input.trim() || status === 'streaming' || status === 'submitted'}
+                    className="px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    {(status === 'streaming' || status === 'submitted') ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
+                
+                {(status === 'streaming' || status === 'submitted') && (
+                  <div className="mt-3 flex items-center gap-2 text-gray-600">
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-pulse"></div>
+                    <span className="text-sm">AI is processing your request...</span>
+                  </div>
+                )}
               </form>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -748,16 +402,24 @@ export default function RecruiterPage() {
       {/* Trace Pane */}
       {showTracePane && (
         <div className="w-96 border-l bg-white flex flex-col">
-          <div className="border-b px-4 py-3">
-            <h3 className="font-semibold">Audit Trail</h3>
-            <p className="text-sm text-gray-600">AI agent actions and decisions</p>
+          <div className="p-4 border-b">
+            <h3 className="font-semibold text-gray-900">Execution Trace</h3>
+            <p className="text-sm text-gray-600">View AI agent decision process</p>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {traceLogs.map((log) => (
-              <TraceLogItem key={log.id} log={log} />
-            ))}
-            {traceLogs.length === 0 && (
-              <p className="text-gray-500 text-sm">No trace logs yet</p>
+          
+          <div className="flex-1 overflow-y-auto p-4">
+            {traceLogs.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No trace logs yet</p>
+                <p className="text-xs">Start a conversation to see AI decision process</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {traceLogs.map((log) => (
+                  <TraceCard key={log.id} log={log} />
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -766,146 +428,131 @@ export default function RecruiterPage() {
   );
 }
 
+// Job Card Component
 function JobCard({ job }: { job: JobData }) {
   return (
-    <Card className="p-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary-600 rounded-lg text-white">
-            <FileText className="h-5 w-5" />
+    <Card className="p-6 border-l-4 border-l-primary-600">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Briefcase className="h-5 w-5 text-primary-600" />
+            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">{job.title}</h3>
-            <p className="text-gray-600">{job.one_liner}</p>
+          
+          <p className="text-gray-600 mb-4">{job.one_liner}</p>
+          
+          <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">{job.location}</span>
+            </div>
+            <Badge variant="secondary">{job.level}</Badge>
+            <Badge variant="outline">{job.department}</Badge>
+            <Badge variant="outline">{job.employment_type}</Badge>
           </div>
         </div>
-        <Badge variant="secondary">{job.level}</Badge>
       </div>
-      
-      <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-600">
-        <div className="flex items-center gap-1">
-          <MapPin className="h-4 w-4" />
-          {job.location}
-        </div>
-        <div className="flex items-center gap-1">
-          <Briefcase className="h-4 w-4" />
-          {job.department}
-        </div>
-        <Badge variant="outline">{job.employment_type}</Badge>
-      </div>
-      
-      <Button variant="outline" className="w-full">
-        View Full Job Description
-      </Button>
     </Card>
   );
 }
 
+// Candidate Card Component
 function CandidateCard({ candidate }: { candidate: CandidateData }) {
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h4 className="font-semibold text-lg">{candidate.name}</h4>
-          <p className="text-gray-600">{candidate.current_position} at {candidate.current_company}</p>
-          <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
+    <Card className="p-6">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="text-lg font-semibold text-gray-900">{candidate.name}</h4>
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+              <span className="text-sm font-medium">{Math.round(candidate.final_score)}</span>
+            </div>
+          </div>
+          
+          <p className="text-gray-600 mb-2">{candidate.current_position} at {candidate.current_company}</p>
+          
+          <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+            <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              {candidate.location}
-            </span>
-            <span>{candidate.years_of_experience} years exp</span>
+              <span>{candidate.location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{candidate.years_of_experience} years exp</span>
+            </div>
           </div>
-        </div>
-        <div className="text-right">
-          <div className="flex items-center gap-1 mb-1">
-            <Star className="h-4 w-4 text-yellow-500" />
-            <span className="font-semibold">{(candidate.similarity * 100).toFixed(0)}%</span>
-          </div>
-          {candidate.final_score && (
-            <Badge variant="secondary">
-              Score: {(candidate.final_score * 100).toFixed(0)}
-            </Badge>
+          
+          {candidate.screening_summary && (
+            <p className="text-sm text-gray-700 mb-3">{candidate.screening_summary}</p>
+          )}
+          
+          {candidate.top_skills && candidate.top_skills.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {candidate.top_skills.slice(0, 3).map((skill, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
-      </div>
-      
-      {candidate.screening_summary && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm">{candidate.screening_summary}</p>
-        </div>
-      )}
-      
-      {candidate.top_skills && candidate.top_skills.length > 0 && (
-        <div className="mb-3">
-          <div className="flex flex-wrap gap-1">
-            {candidate.top_skills.slice(0, 3).map((skill, idx) => (
-              <Badge key={idx} variant="outline" className="text-xs">
-                {skill.skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1">
-          View Profile
-        </Button>
-        <Button size="sm" className="flex-1">
-          <Calendar className="h-4 w-4 mr-1" />
-          Schedule
-        </Button>
       </div>
     </Card>
   );
 }
 
-function TraceLogItem({ log }: { log: TraceLog }) {
-  const [expanded, setExpanded] = useState(false);
+// Trace Card Component
+function TraceCard({ log }: { log: TraceLogData }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   
   return (
-    <Card className="p-3 text-xs">
-      <div 
-        className="flex items-center justify-between cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div>
-          <div className="font-semibold">{log.agent_name}</div>
-          <div className="text-gray-500">{log.execution_time_ms}ms</div>
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
+          <span className="font-medium text-sm text-gray-900">{log.agent_name}</span>
         </div>
-        <div className="text-gray-400">
+        <span className="text-xs text-gray-500">
           {new Date(log.created_at).toLocaleTimeString()}
-        </div>
+        </span>
       </div>
       
-      {expanded && (
-        <div className="mt-2 space-y-2 text-xs">
-          {log.prompt && (
-            <div>
-              <div className="font-semibold">Prompt:</div>
-              <div className="bg-gray-50 p-2 rounded">{log.prompt}</div>
-            </div>
-          )}
+      <div className="text-sm text-gray-600 mb-2">
+        {log.prompt?.substring(0, 100)}...
+      </div>
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-xs"
+      >
+        {isExpanded ? 'Hide Details' : 'Show Details'}
+      </Button>
+      
+      {isExpanded && (
+        <div className="mt-3 space-y-2 text-xs">
+          <div>
+            <strong>Prompt:</strong>
+            <pre className="bg-gray-50 p-2 rounded mt-1 whitespace-pre-wrap">
+              {log.prompt}
+            </pre>
+          </div>
+          
           {log.tool_calls && (
             <div>
-              <div className="font-semibold">Tool Calls:</div>
-              <pre className="bg-gray-50 p-2 rounded overflow-x-auto">
+              <strong>Tool Calls:</strong>
+              <pre className="bg-gray-50 p-2 rounded mt-1 whitespace-pre-wrap">
                 {JSON.stringify(log.tool_calls, null, 2)}
               </pre>
             </div>
           )}
-          {log.sql_executed && (
-            <div>
-              <div className="font-semibold">SQL:</div>
-              <pre className="bg-gray-50 p-2 rounded overflow-x-auto">
-                {log.sql_executed}
-              </pre>
-            </div>
-          )}
+          
           {log.output && (
             <div>
-              <div className="font-semibold">Output:</div>
-              <pre className="bg-gray-50 p-2 rounded overflow-x-auto">
+              <strong>Output:</strong>
+              <pre className="bg-gray-50 p-2 rounded mt-1 whitespace-pre-wrap">
                 {JSON.stringify(log.output, null, 2)}
               </pre>
             </div>
