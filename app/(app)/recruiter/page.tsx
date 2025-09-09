@@ -19,9 +19,19 @@ import {
   Eye,
   Send,
   Loader2,
-  MessageSquare
+  MessageSquare,
+  Bot,
+  Sparkles,
+  ArrowRight,
+  Zap,
+  Brain,
+  Target,
+  CheckCircle2,
+  TrendingUp,
+  Clock,
+  BarChart3
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface JobData {
   id: string;
@@ -138,37 +148,110 @@ export default function RecruiterPage() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <motion.div 
-          className="bg-gradient-to-r from-primary-500 to-primary-600 border-b px-6 py-8 flex items-center justify-between"
+          className="relative bg-gradient-to-r from-primary-500 via-primary-600 to-purple-600 border-b px-6 py-8 overflow-hidden"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center gap-4">
-            <motion.div
-              className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              transition={{ duration: 0.2 }}
-            >
-              <MessageSquare className="h-8 w-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-3xl font-bold text-white font-display">
-                🤖 Recruiter AI
-              </h1>
-              <p className="text-white/90 text-lg">
-                Your intelligent hiring assistant
-              </p>
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5" />
+          <motion.div 
+            className="absolute -top-4 -right-4 w-32 h-32 bg-white/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div
+                  className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/30"
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 6, repeat: Infinity }}
+                >
+                  <Bot className="h-10 w-10 text-white" />
+                </motion.div>
+                <motion.div
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <div className="w-3 h-3 bg-white rounded-full" />
+                </motion.div>
+              </motion.div>
+              
+              <div>
+                <motion.h1 
+                  className="text-4xl font-bold text-white font-display flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Recruiter AI
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="h-6 w-6 text-yellow-300" />
+                  </motion.div>
+                </motion.h1>
+                <motion.p 
+                  className="text-white/90 text-lg flex items-center gap-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </motion.div>
+                  Your intelligent hiring assistant
+                </motion.p>
+                
+                {/* Status indicators */}
+                <motion.div 
+                  className="flex items-center gap-4 mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <div className="flex items-center gap-1 text-white/80 text-sm">
+                    <Brain className="h-3 w-3" />
+                    <span>AI Active</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-white/80 text-sm">
+                    <Zap className="h-3 w-3" />
+                    <span>Ready to Help</span>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTracePane(!showTracePane)}
+                  className="flex items-center gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200 shadow-lg"
+                >
+                  <Eye className="h-4 w-4" />
+                  {showTracePane ? 'Hide' : 'Show'} Trace
+                </Button>
+              </motion.div>
             </div>
           </div>
-          
-          <Button
-            variant="outline"
-            onClick={() => setShowTracePane(!showTracePane)}
-            className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
-          >
-            <Eye className="h-4 w-4" />
-            {showTracePane ? 'Hide' : 'Show'} Trace
-          </Button>
         </motion.div>
 
         {/* Content Area */}
@@ -192,18 +275,81 @@ export default function RecruiterPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
                       >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-primary-200 rounded-full mb-6">
-                          <MessageSquare className="w-4 h-4 text-primary-600" />
-                          <span className="text-sm font-semibold text-primary-700">AI-Powered Recruiting</span>
-                        </div>
+                        <motion.div 
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-100 via-purple-100 to-primary-100 rounded-full mb-8 shadow-lg border border-primary-200"
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Bot className="w-5 h-5 text-primary-600" />
+                          </motion.div>
+                          <span className="text-sm font-bold text-primary-700">AI-Powered Recruiting Platform</span>
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Sparkles className="w-4 h-4 text-primary-500" />
+                          </motion.div>
+                        </motion.div>
                         
-                        <h2 className="text-5xl font-bold font-display text-gray-900 mb-6">
-                          Start Your <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">AI Hiring Journey</span>
-                        </h2>
-                        <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                          Describe what you're looking for and let our AI handle the rest. 
-                          From job descriptions to candidate screening—all in one conversation.
-                        </p>
+                        <motion.h2 
+                          className="text-6xl font-bold font-display text-gray-900 mb-8 leading-tight"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                        >
+                          Transform Your 
+                          <motion.span 
+                            className="bg-gradient-to-r from-primary-600 via-purple-600 to-primary-400 bg-clip-text text-transparent"
+                            animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
+                            transition={{ duration: 5, repeat: Infinity }}
+                          >
+                            Hiring Process
+                          </motion.span>
+                        </motion.h2>
+                        
+                        <motion.p 
+                          className="text-xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.8 }}
+                        >
+                          Simply describe your hiring needs in natural language. Our advanced AI will generate job descriptions, 
+                          find perfect candidates, and provide intelligent screening—all through an intuitive conversation.
+                        </motion.p>
+                        
+                        {/* Quick stats */}
+                        <motion.div 
+                          className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-12"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1 }}
+                        >
+                          <motion.div 
+                            className="text-center group cursor-pointer"
+                            whileHover={{ scale: 1.05, y: -2 }}
+                          >
+                            <div className="text-3xl font-bold text-primary-600 mb-1 group-hover:text-primary-700 transition-colors">10x</div>
+                            <div className="text-sm text-gray-600 font-medium">Faster Hiring</div>
+                          </motion.div>
+                          <motion.div 
+                            className="text-center group cursor-pointer"
+                            whileHover={{ scale: 1.05, y: -2 }}
+                          >
+                            <div className="text-3xl font-bold text-purple-600 mb-1 group-hover:text-purple-700 transition-colors">95%</div>
+                            <div className="text-sm text-gray-600 font-medium">Match Accuracy</div>
+                          </motion.div>
+                          <motion.div 
+                            className="text-center group cursor-pointer"
+                            whileHover={{ scale: 1.05, y: -2 }}
+                          >
+                            <div className="text-3xl font-bold text-green-600 mb-1 group-hover:text-green-700 transition-colors">24/7</div>
+                            <div className="text-sm text-gray-600 font-medium">AI Availability</div>
+                          </motion.div>
+                        </motion.div>
                       </motion.div>
                       
                       {/* Three-step process */}
@@ -213,63 +359,166 @@ export default function RecruiterPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
                       >
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center group hover:shadow-lg transition-all duration-300">
+                        <motion.div 
+                          className="relative bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
+                          whileHover={{ scale: 1.02, y: -5 }}
+                          initial={{ opacity: 0, x: -50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.8 }}
+                        >
                           <motion.div
-                            className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                            whileHover={{ rotate: 5 }}
+                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
+                            whileHover={{ rotate: 10 }}
                           >
-                            <FileText className="w-8 h-8 text-white" />
+                            <FileText className="w-10 h-10 text-white" />
                           </motion.div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">1. Describe Your Need</h3>
-                          <p className="text-gray-600">Tell the AI what kind of role you're hiring for</p>
-                        </div>
+                          <div className="absolute top-4 right-4 text-6xl font-bold text-blue-100 group-hover:text-blue-200 transition-colors">1</div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">Describe Your Need</h3>
+                          <p className="text-gray-600 leading-relaxed">Simply tell our AI what kind of role you're hiring for in natural language</p>
+                          <motion.div
+                            className="mt-4 inline-flex items-center gap-2 text-blue-600 font-medium"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span>Try it now</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.div>
+                        </motion.div>
                         
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center group hover:shadow-lg transition-all duration-300">
+                        <motion.div 
+                          className="relative bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
+                          whileHover={{ scale: 1.02, y: -5 }}
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1 }}
+                        >
                           <motion.div
-                            className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                            whileHover={{ rotate: -5 }}
+                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
+                            whileHover={{ rotate: -10 }}
                           >
-                            <Users className="w-8 h-8 text-white" />
+                            <Users className="w-10 h-10 text-white" />
                           </motion.div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">2. AI Finds Candidates</h3>
-                          <p className="text-gray-600">Get perfectly matched candidates instantly</p>
-                        </div>
+                          <div className="absolute top-4 right-4 text-6xl font-bold text-purple-100 group-hover:text-purple-200 transition-colors">2</div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors">AI Finds Candidates</h3>
+                          <p className="text-gray-600 leading-relaxed">Advanced algorithms search and match the perfect candidates instantly</p>
+                          <motion.div
+                            className="mt-4 inline-flex items-center gap-2 text-purple-600 font-medium"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span>See magic happen</span>
+                            <Sparkles className="w-4 h-4" />
+                          </motion.div>
+                        </motion.div>
                         
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center group hover:shadow-lg transition-all duration-300">
+                        <motion.div 
+                          className="relative bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-3xl p-8 text-center group hover:shadow-2xl transition-all duration-500"
+                          whileHover={{ scale: 1.02, y: -5 }}
+                          initial={{ opacity: 0, x: 50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.2 }}
+                        >
                           <motion.div
-                            className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                            whileHover={{ rotate: 5 }}
+                            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
+                            whileHover={{ rotate: 10 }}
                           >
-                            <Star className="w-8 h-8 text-white" />
+                            <Target className="w-10 h-10 text-white" />
                           </motion.div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">3. Smart Recommendations</h3>
-                          <p className="text-gray-600">Receive ranked candidates with insights</p>
-                        </div>
+                          <div className="absolute top-4 right-4 text-6xl font-bold text-green-100 group-hover:text-green-200 transition-colors">3</div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-700 transition-colors">Smart Recommendations</h3>
+                          <p className="text-gray-600 leading-relaxed">Get ranked candidates with detailed AI-powered insights and analysis</p>
+                          <motion.div
+                            className="mt-4 inline-flex items-center gap-2 text-green-600 font-medium"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span>View insights</span>
+                            <BarChart3 className="w-4 h-4" />
+                          </motion.div>
+                        </motion.div>
                       </motion.div>
                       
-                      {/* Getting started prompt */}
+                      {/* Interactive getting started section */}
                       <motion.div 
-                        className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl p-8"
+                        className="bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl p-10 shadow-xl"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.8 }}
                       >
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                          💬 Try saying something like:
-                        </h3>
+                        <motion.div
+                          className="text-center mb-8"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 1 }}
+                        >
+                          <motion.h3 
+                            className="text-2xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-3"
+                            whileHover={{ scale: 1.02 }}
+                          >
+                            <motion.div
+                              animate={{ rotate: [0, 15, -15, 0] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              💬
+                            </motion.div>
+                            Start with any of these examples:
+                          </motion.h3>
+                          <p className="text-gray-600">Click on any example to try it instantly</p>
+                        </motion.div>
+                        
                         <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <div className="bg-primary-50 text-primary-800 px-4 py-3 rounded-xl">
-                            "Find me a senior React developer with 5+ years in Mumbai"
-                          </div>
-                          <div className="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl">
-                            "I need a marketing manager for our fintech startup"
-                          </div>
-                          <div className="bg-green-50 text-green-800 px-4 py-3 rounded-xl">
-                            "Looking for a data scientist with Python and ML experience"
-                          </div>
-                          <div className="bg-orange-50 text-orange-800 px-4 py-3 rounded-xl">
-                            "Hire a product manager for B2B SaaS, remote OK"
-                          </div>
+                          <motion.button
+                            className="bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 text-primary-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-primary-200 hover:border-primary-300 group"
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setInput("Find me a senior React developer with 5+ years in Mumbai")}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-primary-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <FileText className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-medium">"Find me a senior React developer with 5+ years in Mumbai"</span>
+                            </div>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-purple-200 hover:border-purple-300 group"
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setInput("I need a marketing manager for our fintech startup")}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <TrendingUp className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-medium">"I need a marketing manager for our fintech startup"</span>
+                            </div>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-green-200 hover:border-green-300 group"
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setInput("Looking for a data scientist with Python and ML experience")}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <BarChart3 className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-medium">"Looking for a data scientist with Python and ML experience"</span>
+                            </div>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-800 px-6 py-4 rounded-2xl text-left transition-all duration-300 border border-orange-200 hover:border-orange-300 group"
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setInput("Hire a product manager for B2B SaaS, remote OK")}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Target className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-medium">"Hire a product manager for B2B SaaS, remote OK"</span>
+                            </div>
+                          </motion.button>
                         </div>
                       </motion.div>
                     </div>
@@ -371,26 +620,127 @@ export default function RecruiterPage() {
               )}
             </div>
 
-            {/* Input */}
-            <div className="border-t bg-white p-6 shadow-lg">
-              <form onSubmit={handleSubmit} className="flex gap-2">
-                <Textarea
-                  value={input}
-                  onChange={handleInputChange}
-                  placeholder="Describe the role you're hiring for..."
-                  className="flex-1 min-h-[60px] resize-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e as any);
-                    }
-                  }}
-                />
-                <Button type="submit" disabled={isLoading || !input?.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
+            {/* Enhanced Input */}
+            <motion.div 
+              className="border-t bg-gradient-to-r from-white via-gray-50 to-white p-8 shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+                <div className="relative">
+                  <motion.div
+                    className="flex gap-4 items-end"
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex-1 relative">
+                      <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary-600" />
+                        Describe your hiring needs
+                      </label>
+                      <Textarea
+                        value={input}
+                        onChange={handleInputChange}
+                        placeholder="E.g., 'Find me a senior React developer with 5+ years experience in Mumbai' or 'I need a marketing manager for our fintech startup'..."
+                        className="flex-1 min-h-[80px] max-h-[160px] resize-none border-2 border-gray-200 focus:border-primary-400 focus:ring-primary-200 rounded-2xl px-6 py-4 text-lg placeholder:text-gray-400 shadow-sm transition-all duration-200"
+                        disabled={status === 'streaming' || status === 'submitted'}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmit(e as any);
+                          }
+                        }}
+                      />
+                      
+                      {/* Status indicator */}
+                      <AnimatePresence>
+                        {(status === 'streaming' || status === 'submitted') && (
+                          <motion.div
+                            className="absolute right-4 top-16 flex items-center gap-2 text-primary-600"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                          >
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            >
+                              <Brain className="h-4 w-4" />
+                            </motion.div>
+                            <span className="text-sm font-medium">AI is thinking...</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button 
+                        type="submit" 
+                        disabled={!input.trim() || status === 'streaming' || status === 'submitted'}
+                        className="px-8 py-6 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl shadow-lg text-lg font-semibold transition-all duration-200"
+                      >
+                        {(status === 'streaming' || status === 'submitted') ? (
+                          <motion.div
+                            className="flex items-center gap-2"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                          >
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            >
+                              <Loader2 className="h-5 w-5" />
+                            </motion.div>
+                            <span>Processing</span>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            className="flex items-center gap-2"
+                            whileHover={{ x: 2 }}
+                          >
+                            <Send className="h-5 w-5" />
+                            <span>Send to AI</span>
+                          </motion.div>
+                        )}
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                  
+                  {/* Enhanced suggestions */}
+                  {!input && (
+                    <motion.div 
+                      className="mt-6 flex flex-wrap gap-3 justify-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      {[
+                        { icon: FileText, text: "Generate JD", color: "blue" },
+                        { icon: Users, text: "Find Candidates", color: "purple" },
+                        { icon: Target, text: "Screen & Rank", color: "green" },
+                        { icon: Clock, text: "Schedule Interviews", color: "orange" }
+                      ].map((item, index) => (
+                        <motion.div
+                          key={item.text}
+                          className={`flex items-center gap-2 px-4 py-2 bg-${item.color}-50 text-${item.color}-700 rounded-full border border-${item.color}-200 text-sm font-medium`}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5 + index * 0.1 }}
+                          whileHover={{ scale: 1.05, y: -2 }}
+                        >
+                          <item.icon className="w-3 h-3" />
+                          <span>{item.text}</span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
               </form>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
