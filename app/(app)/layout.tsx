@@ -32,7 +32,7 @@ export default function AppLayout({
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold font-display gradient-text">Recruiting Copilot</h1>
+              <h1 className="text-xl font-bold font-display gradient-text">Recrutr</h1>
               <p className="text-xs text-gray-500 font-medium">AI-powered hiring</p>
             </div>
           </Link>

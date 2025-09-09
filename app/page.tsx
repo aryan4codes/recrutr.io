@@ -46,7 +46,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold font-display gradient-text">Recruiting Copilot</span>
+              <span className="text-lg sm:text-xl font-bold font-display gradient-text">Recrutr</span>
             </div>
 
             <div className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -198,12 +198,12 @@ export default function LandingPage() {
               whileHover={{ scale: 1.05 }}
             >
               <Bot className="w-4 h-4 text-primary-600" />
-              <span className="text-sm font-semibold text-primary-700">Featured: Recruiter AI</span>
+              <span className="text-sm font-semibold text-primary-700">Featured: Recruiter Copilot</span>
               <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             </motion.div>
             
             <h2 className="text-5xl font-bold font-display text-gray-900 mb-6">
-              Meet Your New <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Recruiter AI</span>
+              Meet Your New <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Recruiter Copilot</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
               The world's most advanced AI recruiting assistant. Generate job descriptions, find perfect candidates, 
@@ -280,7 +280,7 @@ export default function LandingPage() {
                       <Bot className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-semibold">Recruiter AI</h4>
+                      <h4 className="font-semibold">Recruiter Copilot</h4>
                       <p className="text-xs text-white/80">Your hiring assistant</p>
                     </div>
                     <div className="ml-auto flex items-center gap-2">
@@ -918,7 +918,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Recruiting Copilot. All rights reserved.</p>
+            <p>&copy; 2025 Recrutr. All rights reserved.</p>
           </div>
       </div>
       </footer>

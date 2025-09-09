@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Recruiting Copilot - AI-Powered Hiring Platform',
+  title: 'Recrutr - AI-Powered Hiring Platform',
   description: 'Transform your recruiting workflow with intelligent automation that finds, evaluates, and schedules the perfect candidates.',
 }
 
